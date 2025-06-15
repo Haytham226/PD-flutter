@@ -10,7 +10,7 @@
     canvas { position: absolute; top: 0; left: 0; }
     video { transform: scaleX(-1); width: 100vw; height: 100vh; object-fit: cover; }
     #output { position: fixed; bottom: 20px; width: 100%; font-size: 24px; font-weight: bold; }
-    #aruco-img { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); background: white; border: 2px solid white; z-index: 10; }
+    #aruco-img { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: white; border: 2px solid white; z-index: 10; }
     #ppi-box { width: 1in; position: absolute; visibility: hidden; }
   </style>
 </head>
@@ -37,7 +37,10 @@
       const pixels = inches * pixelsPerInch;
       arucoImg.style.width = `${pixels}px`;
     }
-    estimatePPI();
+
+    window.addEventListener('load', () => {
+      setTimeout(estimatePPI, 500);
+    });
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
       .then(stream => video.srcObject = stream);
