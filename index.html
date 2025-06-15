@@ -10,18 +10,34 @@
     canvas { position: absolute; top: 0; left: 0; }
     video { transform: scaleX(-1); width: 100vw; height: 100vh; object-fit: cover; }
     #output { position: fixed; bottom: 20px; width: 100%; font-size: 24px; font-weight: bold; }
+    #aruco-img { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); background: white; border: 2px solid white; z-index: 10; }
+    #ppi-box { width: 1in; position: absolute; visibility: hidden; }
   </style>
 </head>
 <body>
   <video id="video" autoplay playsinline></video>
   <canvas id="overlay"></canvas>
   <div id="output">Loading...</div>
+  <div id="ppi-box"></div>
+  <img id="aruco-img" src="https://raw.githubusercontent.com/opencv/opencv/master/doc/pattern.png" alt="Aruco Marker"/>
 
   <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('overlay');
     const ctx = canvas.getContext('2d');
     const output = document.getElementById('output');
+    const arucoImg = document.getElementById('aruco-img');
+
+    // Estimate PPI and size ArUco marker
+    function estimatePPI() {
+      const ppiBox = document.getElementById('ppi-box');
+      const pixelsPerInch = ppiBox.offsetWidth;
+      const cmWidth = 6;
+      const inches = cmWidth / 2.54;
+      const pixels = inches * pixelsPerInch;
+      arucoImg.style.width = `${pixels}px`;
+    }
+    estimatePPI();
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
       .then(stream => video.srcObject = stream);
@@ -44,16 +60,19 @@
       const left = lm[474]; // left iris center
       const right = lm[469]; // right iris center
       const pdPixels = Math.sqrt((left.x - right.x) ** 2 + (left.y - right.y) ** 2) * canvas.width;
-      const arucoCm = 6.0; // assumed 6 cm width of ArUco marker
-      const arucoPixels = 150; // estimated marker size in pixels (adjust after testing)
-      const pixelsPerCm = arucoPixels / arucoCm;
+
+      const ppiBox = document.getElementById('ppi-box');
+      const pixelsPerInch = ppiBox.offsetWidth;
+      const pixelsPerCm = pixelsPerInch / 2.54;
       const pdMm = (pdPixels / pixelsPerCm) * 10;
+
       ctx.beginPath();
       ctx.arc(left.x * canvas.width, left.y * canvas.height, 5, 0, 2 * Math.PI);
       ctx.arc(right.x * canvas.width, right.y * canvas.height, 5, 0, 2 * Math.PI);
       ctx.strokeStyle = 'lime';
       ctx.lineWidth = 3;
       ctx.stroke();
+
       output.innerText = `Estimated PD: ${pdMm.toFixed(1)} mm`;
     }
 
